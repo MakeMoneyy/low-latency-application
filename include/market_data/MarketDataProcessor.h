@@ -1,8 +1,13 @@
 #pragma once
 
+#ifdef MOCK_AERON
+#include "common/MockAeron.h"
+#else
 #include <aeron/Aeron.h>
 #include <aeron/Subscription.h>
 #include <aeron/Publication.h>
+#endif
+
 #include <memory>
 #include <atomic>
 #include <thread>

@@ -1,0 +1,91 @@
+cmake_minimum_required(VERSION 3.10)
+project(LowLatencyTradingSystem)
+
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+# Release build optimizations
+set(CMAKE_CXX_FLAGS_RELEASE "-O3 -DNDEBUG -march=native")
+
+# Find required packages
+find_package(PkgConfig REQUIRED)
+find_package(Threads REQUIRED)
+
+# Try to find vcpkg packages
+find_package(spdlog CONFIG)
+find_package(nlohmann_json CONFIG)
+find_package(fmt CONFIG)
+
+# Include directories
+include_directories(include)
+
+# Define MOCK_AERON to use mock implementation instead of real Aeron
+add_definitions(-DMOCK_AERON)
+
+# Source files
+set(COMMON_SOURCES
+    src/common/Config.cpp
+    src/common/Logger.cpp
+    src/common/TimeUtils.cpp
+    src/common/DCIndicator.cpp
+)
+
+set(MARKET_DATA_SOURCES
+    src/market_data/MarketDataProcessor.cpp
+)
+
+set(STRATEGY_SOURCES
+    src/strategy/StrategyEngine.cpp
+)
+
+set(EXECUTION_SOURCES
+    src/execution/ExecutionEngine.cpp
+)
+
+# Libraries
+add_library(Common ${COMMON_SOURCES})
+add_library(MarketData ${MARKET_DATA_SOURCES})
+add_library(Strategy ${STRATEGY_SOURCES})
+add_library(Execution ${EXECUTION_SOURCES})
+
+# Link libraries based on availability
+target_link_libraries(Common Threads::Threads)
+
+if(spdlog_FOUND)
+    target_link_libraries(Common spdlog::spdlog)
+    message(STATUS "Using system spdlog")
+else()
+    message(STATUS "spdlog not found - using header-only fallback")
+endif()
+
+if(nlohmann_json_FOUND)
+    target_link_libraries(Common nlohmann_json::nlohmann_json)
+    message(STATUS "Using system nlohmann_json")
+else()
+    message(STATUS "nlohmann_json not found - using header-only fallback")
+endif()
+
+if(fmt_FOUND)
+    target_link_libraries(Common fmt::fmt)
+    message(STATUS "Using system fmt")
+endif()
+
+# Link other libraries
+target_link_libraries(MarketData Common)
+target_link_libraries(Strategy Common)
+target_link_libraries(Execution Common)
+
+# Executables
+add_executable(trading_system src/main/trading_system_main.cpp)
+add_executable(market_data_simulator src/main/market_data_simulator.cpp)
+
+# Test executables
+add_executable(integration_test test/integration_test.cpp)
+
+# Link executables
+target_link_libraries(trading_system MarketData Strategy Execution)
+target_link_libraries(market_data_simulator MarketData)
+target_link_libraries(integration_test MarketData Strategy Execution)
+
+# Copy config files to build directory
+configure_file(config/system_config.json config/system_config.json COPYONLY) 
