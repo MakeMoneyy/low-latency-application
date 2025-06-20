@@ -1,0 +1,176 @@
+{
+    "aeron": {
+        "driver": {
+            "threading_mode": "DEDICATED",
+            "conductor_idle_strategy": "spin",
+            "sender_idle_strategy": "noop",
+            "receiver_idle_strategy": "noop",
+            "shared_idle_strategy": "spin",
+            "term_buffer_sparse_file": false,
+            "perform_storage_checks": false,
+            "spies_simulate_connection": false,
+            "reliable_stream": true,
+            "tether_subscriptions": true,
+            "rejoin_stream": true,
+            "enable_experimental_features": true
+        },
+        "client": {
+            "linger_timeout": 5000,
+            "resource_linger_timeout": 3000,
+            "publication_connection_timeout": 5000,
+            "publication_linger_timeout": 5000,
+            "subscription_connection_timeout": 5000,
+            "inter_service_timeout": 10000,
+            "publication_unblock_timeout": 15000,
+            "publication_connection_timeout": 5000,
+            "image_liveness_timeout": 10000,
+            "rcv_initial_window_length": 131072,
+            "socket_rcvbuf_length": 131072,
+            "socket_sndbuf_length": 131072,
+            "mtu_length": 1408,
+            "ipc_mtu_length": 1408,
+            "initial_window_length": 131072,
+            "loss_report_length": 1024,
+            "file_page_size": 4096,
+            "conductor_buffer_length": 1048576,
+            "to_clients_buffer_length": 1048576,
+            "to_driver_buffer_length": 1048576,
+            "counter_values_buffer_length": 1048576,
+            "error_buffer_length": 1048576,
+            "client_liveness_timeout": 5000,
+            "term_buffer_length": 16777216,
+            "ipc_term_buffer_length": 16777216,
+            "log_buffer_length": 16777216,
+            "max_messages_per_send": 2,
+            "publication_reserved_session_id_low": 1,
+            "publication_reserved_session_id_high": 1000000,
+            "subscription_reserved_session_id_low": 1,
+            "subscription_reserved_session_id_high": 1000000
+        },
+        "network": {
+            "endpoint": "localhost:20121",
+            "control_endpoint": "localhost:20122",
+            "multicast_endpoint": "224.0.1.1:40456",
+            "interface": "",
+            "multicast_interface": "",
+            "multicast_ttl": 0,
+            "socket_so_reuseaddr": false,
+            "receiver_group_consideration": "SRC"
+        },
+        "channels": {
+            "market_data": {
+                "channel": "aeron:udp?endpoint=localhost:20001|interface=localhost",
+                "stream_id": 1001,
+                "session_id": 1001,
+                "term_length": 16777216,
+                "mtu": 1408,
+                "reliable": true,
+                "flow_control": "unicast"
+            },
+            "order_execution": {
+                "channel": "aeron:udp?endpoint=localhost:20002|interface=localhost",
+                "stream_id": 1002,
+                "session_id": 1002,
+                "term_length": 16777216,
+                "mtu": 1408,
+                "reliable": true,
+                "flow_control": "unicast"
+            },
+            "risk_management": {
+                "channel": "aeron:udp?endpoint=localhost:20003|interface=localhost",
+                "stream_id": 1003,
+                "session_id": 1003,
+                "term_length": 8388608,
+                "mtu": 1408,
+                "reliable": true,
+                "flow_control": "unicast"
+            },
+            "control": {
+                "channel": "aeron:ipc?term-length=1m",
+                "stream_id": 2001,
+                "session_id": 2001,
+                "term_length": 1048576,
+                "reliable": true
+            }
+        },
+        "performance": {
+            "cpu_affinity": {
+                "enabled": true,
+                "conductor_thread": 0,
+                "sender_thread": 1,
+                "receiver_thread": 2,
+                "shared_thread": 3
+            },
+            "memory": {
+                "pre_touch_mapped_memory": true,
+                "use_memory_mapped_buffers": true,
+                "perform_storage_checks": false
+            },
+            "network": {
+                "socket_rcvbuf_length": 2097152,
+                "socket_sndbuf_length": 2097152,
+                "rcv_initial_window_length": 2097152,
+                "max_messages_per_send": 2,
+                "send_channel_endpoint_supplier": "default"
+            }
+        },
+        "monitoring": {
+            "enable_loss_report": true,
+            "enable_per_image_reflection": true,
+            "enable_publication_reflection": true,
+            "enable_subscription_reflection": true,
+            "loss_report_buffer_length": 1048576,
+            "system_counters_buffer_length": 1048576
+        },
+        "directories": {
+            "aeron_dir": "C:/LowLatencyTrading/aeron",
+            "log_dir": "C:/LowLatencyTrading/logs/aeron",
+            "tmp_dir": "C:/LowLatencyTrading/tmp"
+        }
+    },
+    "application": {
+        "message_types": {
+            "market_data_update": 1,
+            "trade_signal": 2,
+            "order_request": 3,
+            "order_response": 4,
+            "risk_check": 5,
+            "system_control": 6,
+            "heartbeat": 7,
+            "dc_event": 8
+        },
+        "timeouts": {
+            "heartbeat_interval_ms": 1000,
+            "connection_timeout_ms": 5000,
+            "message_timeout_ms": 100,
+            "shutdown_timeout_ms": 30000
+        },
+        "buffer_sizes": {
+            "message_buffer_size": 65536,
+            "batch_size": 100,
+            "ring_buffer_size": 1048576
+        },
+        "threading": {
+            "market_data_thread_affinity": 4,
+            "strategy_thread_affinity": 5,
+            "execution_thread_affinity": 6,
+            "risk_thread_affinity": 7
+        }
+    },
+    "trading": {
+        "dc_thresholds": [0.005, 0.01, 0.02, 0.05],
+        "max_position_size": 1000000,
+        "max_daily_loss": 50000,
+        "risk_check_frequency_ms": 100,
+        "order_timeout_ms": 5000,
+        "max_orders_per_second": 100
+    },
+    "logging": {
+        "aeron_log_level": "INFO",
+        "application_log_level": "INFO",
+        "log_to_file": true,
+        "log_rotation": true,
+        "max_log_file_size_mb": 100,
+        "max_log_files": 10
+    }
+} 

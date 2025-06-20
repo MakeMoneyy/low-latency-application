@@ -1,0 +1,219 @@
+cmake_minimum_required(VERSION 3.10)
+project(LowLatencyTradingSystem)
+
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+# Production build optimizations
+set(CMAKE_CXX_FLAGS_RELEASE "-O3 -DNDEBUG -march=native -mtune=native")
+set(CMAKE_CXX_FLAGS_DEBUG "-O0 -g -DDEBUG")
+
+# Set default build type to Release for production
+if(NOT CMAKE_BUILD_TYPE)
+    set(CMAKE_BUILD_TYPE Release)
+endif()
+
+# Find required packages
+find_package(PkgConfig REQUIRED)
+find_package(Threads REQUIRED)
+
+# vcpkg integration
+if(DEFINED ENV{VCPKG_ROOT})
+    set(CMAKE_TOOLCHAIN_FILE "$ENV{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake")
+endif()
+
+# Find vcpkg packages
+find_package(spdlog CONFIG)
+find_package(nlohmann_json CONFIG)
+find_package(fmt CONFIG)
+
+# Find Aeron
+find_path(AERON_INCLUDE_DIR 
+    NAMES aeron/Aeron.h
+    HINTS 
+        $ENV{AERON_DIR}/include
+        C:/aeron/install/include
+        /usr/local/include
+        /opt/aeron/include
+)
+
+find_library(AERON_CLIENT_LIB 
+    NAMES aeron_client
+    HINTS 
+        $ENV{AERON_DIR}/lib
+        C:/aeron/install/lib
+        /usr/local/lib
+        /opt/aeron/lib
+)
+
+find_library(AERON_DRIVER_LIB 
+    NAMES aeron_driver
+    HINTS 
+        $ENV{AERON_DIR}/lib
+        C:/aeron/install/lib
+        /usr/local/lib
+        /opt/aeron/lib
+)
+
+# Check if Aeron is available
+if(AERON_INCLUDE_DIR AND AERON_CLIENT_LIB)
+    set(AERON_FOUND TRUE)
+    message(STATUS "Found Aeron: ${AERON_INCLUDE_DIR}")
+    message(STATUS "Aeron Client Library: ${AERON_CLIENT_LIB}")
+else()
+    set(AERON_FOUND FALSE)
+    message(WARNING "Aeron not found - falling back to Mock implementation")
+    add_definitions(-DMOCK_AERON)
+endif()
+
+# Include directories
+include_directories(include)
+if(AERON_FOUND)
+    include_directories(${AERON_INCLUDE_DIR})
+endif()
+
+# Compiler-specific optimizations
+if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU" OR CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+    # GCC/Clang optimizations
+    set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -flto -ffast-math")
+    set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -funroll-loops -finline-functions")
+elseif(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
+    # MSVC optimizations
+    set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} /GL /Ox /Ob2")
+endif()
+
+# Source files
+set(COMMON_SOURCES
+    src/common/Config.cpp
+    src/common/Logger.cpp
+    src/common/TimeUtils.cpp
+    src/common/DCIndicator.cpp
+)
+
+set(MARKET_DATA_SOURCES
+    src/market_data/MarketDataProcessor.cpp
+)
+
+set(STRATEGY_SOURCES
+    src/strategy/StrategyEngine.cpp
+)
+
+set(EXECUTION_SOURCES
+    src/execution/ExecutionEngine.cpp
+)
+
+# Libraries
+add_library(Common ${COMMON_SOURCES})
+add_library(MarketData ${MARKET_DATA_SOURCES})
+add_library(Strategy ${STRATEGY_SOURCES})
+add_library(Execution ${EXECUTION_SOURCES})
+
+# Link libraries to Common
+target_link_libraries(Common Threads::Threads)
+
+if(spdlog_FOUND)
+    target_link_libraries(Common spdlog::spdlog)
+    message(STATUS "Linking with system spdlog")
+else()
+    message(STATUS "spdlog not found - using header-only fallback")
+endif()
+
+if(nlohmann_json_FOUND)
+    target_link_libraries(Common nlohmann_json::nlohmann_json)
+    message(STATUS "Linking with system nlohmann_json")
+else()
+    message(STATUS "nlohmann_json not found - using header-only fallback")
+endif()
+
+if(fmt_FOUND)
+    target_link_libraries(Common fmt::fmt)
+    message(STATUS "Linking with system fmt")
+endif()
+
+# Link Aeron if available
+if(AERON_FOUND)
+    target_link_libraries(Common ${AERON_CLIENT_LIB})
+    if(AERON_DRIVER_LIB)
+        target_link_libraries(Common ${AERON_DRIVER_LIB})
+    endif()
+    message(STATUS "Linking with Aeron libraries")
+endif()
+
+# Link other libraries
+target_link_libraries(MarketData Common)
+target_link_libraries(Strategy Common)
+target_link_libraries(Execution Common)
+
+# Main executables
+add_executable(trading_system src/main/trading_system_main.cpp)
+add_executable(market_data_simulator src/main/market_data_simulator.cpp)
+
+# Link executables
+target_link_libraries(trading_system MarketData Strategy Execution)
+target_link_libraries(market_data_simulator MarketData)
+
+# Test executables (if enabled)
+option(BUILD_TESTS "Build test programs" ON)
+if(BUILD_TESTS)
+    add_executable(unit_tests test/unit_tests.cpp)
+    add_executable(performance_test test/performance_test.cpp)
+    add_executable(integration_test test/integration_test.cpp)
+    
+    target_link_libraries(unit_tests MarketData Strategy Execution)
+    target_link_libraries(performance_test MarketData Strategy Execution)
+    target_link_libraries(integration_test MarketData Strategy Execution)
+endif()
+
+# Benchmarking (if Google Benchmark is available)
+find_package(benchmark CONFIG)
+if(benchmark_FOUND AND BUILD_TESTS)
+    add_executable(benchmark_test test/benchmark_test.cpp)
+    target_link_libraries(benchmark_test MarketData Strategy Execution benchmark::benchmark)
+    message(STATUS "Building with Google Benchmark support")
+endif()
+
+# Copy configuration files to build directory
+configure_file(config/system_config.json config/system_config.json COPYONLY)
+
+# Create production configuration
+if(AERON_FOUND)
+    configure_file(config/aeron_config.json config/aeron_config.json COPYONLY)
+endif()
+
+# Installation targets for production deployment
+install(TARGETS trading_system market_data_simulator
+    RUNTIME DESTINATION bin
+    LIBRARY DESTINATION lib
+    ARCHIVE DESTINATION lib
+)
+
+install(FILES config/system_config.json
+    DESTINATION config
+)
+
+if(AERON_FOUND)
+    install(FILES config/aeron_config.json
+        DESTINATION config
+    )
+endif()
+
+# Print build configuration summary
+message(STATUS "")
+message(STATUS "=== Build Configuration Summary ===")
+message(STATUS "Build Type: ${CMAKE_BUILD_TYPE}")
+message(STATUS "C++ Standard: ${CMAKE_CXX_STANDARD}")
+message(STATUS "Compiler: ${CMAKE_CXX_COMPILER_ID}")
+message(STATUS "Aeron Found: ${AERON_FOUND}")
+if(spdlog_FOUND)
+    message(STATUS "spdlog: Found")
+else()
+    message(STATUS "spdlog: Using fallback")
+endif()
+if(nlohmann_json_FOUND)
+    message(STATUS "nlohmann_json: Found")
+else()
+    message(STATUS "nlohmann_json: Using fallback")
+endif()
+message(STATUS "Build Tests: ${BUILD_TESTS}")
+message(STATUS "====================================")
+message(STATUS "") 
