@@ -1,0 +1,29 @@
+cmake_minimum_required(VERSION 3.10)
+project(LowLatencyTradingSystem)
+
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+# Release build optimizations
+set(CMAKE_CXX_FLAGS_RELEASE "-O3 -DNDEBUG -march=native")
+
+# Include directories
+include_directories(include)
+
+# Common source files (without external dependencies)
+set(COMMON_SOURCES
+    src/common/TimeUtils.cpp
+    src/common/DCIndicator.cpp
+)
+
+# Test executable for DC indicator
+add_executable(test_dc_indicator 
+    ${COMMON_SOURCES}
+    test/test_dc_indicator.cpp
+)
+
+# Simple test without external dependencies
+add_executable(simple_test
+    ${COMMON_SOURCES}
+    test/simple_test.cpp
+) 
