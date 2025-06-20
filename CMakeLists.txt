@@ -35,17 +35,14 @@ set(COMMON_SOURCES
 
 set(MARKET_DATA_SOURCES
     src/market_data/MarketDataProcessor.cpp
-    src/market_data/DCEventDetector.cpp
 )
 
 set(STRATEGY_SOURCES
     src/strategy/StrategyEngine.cpp
-    src/strategy/DCStrategy.cpp
 )
 
 set(EXECUTION_SOURCES
     src/execution/ExecutionEngine.cpp
-    src/execution/OrderManager.cpp
 )
 
 # Libraries
@@ -55,10 +52,8 @@ add_library(Strategy ${STRATEGY_SOURCES})
 add_library(Execution ${EXECUTION_SOURCES})
 
 # Executables
-add_executable(market_data_processor src/main/market_data_main.cpp)
-add_executable(strategy_engine src/main/strategy_main.cpp)
-add_executable(execution_engine src/main/execution_main.cpp)
 add_executable(trading_system src/main/trading_system_main.cpp)
+add_executable(market_data_simulator src/main/market_data_simulator.cpp)
 
 # Link libraries
 target_link_libraries(Common ${AERON_CLIENT_LIB} Threads::Threads)
@@ -66,10 +61,8 @@ target_link_libraries(MarketData Common ${AERON_CLIENT_LIB})
 target_link_libraries(Strategy Common ${AERON_CLIENT_LIB})
 target_link_libraries(Execution Common ${AERON_CLIENT_LIB})
 
-target_link_libraries(market_data_processor MarketData)
-target_link_libraries(strategy_engine Strategy)
-target_link_libraries(execution_engine Execution)
 target_link_libraries(trading_system MarketData Strategy Execution)
+target_link_libraries(market_data_simulator MarketData)
 
 # Copy config files to build directory
 configure_file(config/system_config.json config/system_config.json COPYONLY)

@@ -6,6 +6,7 @@
 #include <memory>
 #include <atomic>
 #include <thread>
+#include <mutex>
 
 #include "common/DCIndicator.h"
 #include "common/TimeUtils.h"

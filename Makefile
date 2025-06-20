@@ -15,8 +15,12 @@ INCLUDE_DIR = include
 BUILD_DIR = build
 
 # Source files
-COMMON_SOURCES = $(SRC_DIR)/common/DCIndicator.cpp $(SRC_DIR)/common/TimeUtils.cpp
+COMMON_SOURCES = $(SRC_DIR)/common/DCIndicator.cpp $(SRC_DIR)/common/TimeUtils.cpp $(SRC_DIR)/common/Config.cpp $(SRC_DIR)/common/Logger.cpp
+MARKET_DATA_SOURCES = $(SRC_DIR)/market_data/MarketDataProcessor.cpp
+STRATEGY_SOURCES = $(SRC_DIR)/strategy/StrategyEngine.cpp
+EXECUTION_SOURCES = $(SRC_DIR)/execution/ExecutionEngine.cpp
 MAIN_SOURCE = $(SRC_DIR)/main/trading_system_main.cpp
+SIMULATOR_SOURCE = $(SRC_DIR)/main/market_data_simulator.cpp
 
 # Default target
 all: release
@@ -25,13 +29,15 @@ all: release
 release:
 	@echo "Building release version..."
 	@mkdir -p $(BUILD_DIR)
-	$(CXX) $(CXXFLAGS) $(INCLUDES) $(COMMON_SOURCES) $(MAIN_SOURCE) $(LIBS) -o $(BUILD_DIR)/trading_system
+	$(CXX) $(CXXFLAGS) $(INCLUDES) $(COMMON_SOURCES) $(MARKET_DATA_SOURCES) $(STRATEGY_SOURCES) $(EXECUTION_SOURCES) $(MAIN_SOURCE) $(LIBS) -o $(BUILD_DIR)/trading_system
+	$(CXX) $(CXXFLAGS) $(INCLUDES) $(COMMON_SOURCES) $(MARKET_DATA_SOURCES) $(SIMULATOR_SOURCE) $(LIBS) -o $(BUILD_DIR)/market_data_simulator
 
 # Debug build
 debug:
 	@echo "Building debug version..."
 	@mkdir -p $(BUILD_DIR)
-	$(CXX) $(DEBUG_FLAGS) $(INCLUDES) $(COMMON_SOURCES) $(MAIN_SOURCE) $(LIBS) -o $(BUILD_DIR)/trading_system_debug
+	$(CXX) $(DEBUG_FLAGS) $(INCLUDES) $(COMMON_SOURCES) $(MARKET_DATA_SOURCES) $(STRATEGY_SOURCES) $(EXECUTION_SOURCES) $(MAIN_SOURCE) $(LIBS) -o $(BUILD_DIR)/trading_system_debug
+	$(CXX) $(DEBUG_FLAGS) $(INCLUDES) $(COMMON_SOURCES) $(MARKET_DATA_SOURCES) $(SIMULATOR_SOURCE) $(LIBS) -o $(BUILD_DIR)/market_data_simulator_debug
 
 # Clean build files
 clean:
