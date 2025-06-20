@@ -1,0 +1,53 @@
+{
+  "aeron": {
+    "market_data": {
+      "channel": "aeron:ipc",
+      "stream_id": 1001,
+      "directory": "/tmp/aeron",
+      "timeout_ms": 5000
+    },
+    "strategy": {
+      "channel": "aeron:ipc",
+      "stream_id": 1002,
+      "directory": "/tmp/aeron",
+      "timeout_ms": 5000
+    },
+    "execution": {
+      "channel": "aeron:ipc",
+      "stream_id": 1003,
+      "directory": "/tmp/aeron",
+      "timeout_ms": 5000
+    }
+  },
+  "dc_strategy": {
+    "theta": 0.004,
+    "enable_tmv_calculation": true,
+    "enable_time_adjustment": true
+  },
+  "strategy_settings": {
+    "name": "DC_Strategy_v1",
+    "enable_hmm": false,
+    "hmm_states": 2,
+    "hmm_max_iterations": 200,
+    "leverage_factor": 1.0
+  },
+  "execution": {
+    "simulation_mode": true,
+    "initial_capital": 100000.0,
+    "max_position_size": 10000.0,
+    "risk_per_trade": 0.02
+  },
+  "performance": {
+    "enable_latency_tracking": true,
+    "enable_performance_metrics": true,
+    "output_file": "performance_report.json",
+    "latency_report_interval_ms": 1000
+  },
+  "logging": {
+    "level": "info",
+    "file": "trading_system.log",
+    "console_output": true,
+    "max_file_size_mb": 100,
+    "max_files": 5
+  }
+}
